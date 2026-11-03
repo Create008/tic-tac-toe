@@ -1,0 +1,6 @@
+{
+  "name": "NEON XO - Ultimate Neon Tic-Tac-Toe",
+  "description": "Retro-futuristic neon Tic-Tac-Toe featuring dynamic 3x3 to 5x5 boards, intelligent AI with minimax and heuristic evaluation, match series, customizable themes, sound effects, stats tracking, and rich visual animations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

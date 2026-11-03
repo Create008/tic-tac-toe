@@ -1,0 +1,336 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEON XO | Mini Game</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: radial-gradient(circle at top, #182044, #080b16 65%);
+    color: white;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.game {
+    width: 100%;
+    max-width: 420px;
+    text-align: center;
+}
+
+h1 {
+    font-size: 42px;
+    letter-spacing: 5px;
+    margin-bottom: 5px;
+    color: #fff;
+    text-shadow: 0 0 15px #8b5cf6;
+}
+
+.subtitle {
+    color: #9ca3af;
+    margin-bottom: 30px;
+    letter-spacing: 2px;
+    font-size: 12px;
+}
+
+.scores {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 22px;
+}
+
+.score-card {
+    flex: 1;
+    background: #151b30;
+    border: 1px solid #303957;
+    border-radius: 14px;
+    padding: 15px 5px;
+}
+
+.score-card span {
+    display: block;
+    font-size: 12px;
+    color: #a5b4fc;
+    margin-bottom: 8px;
+}
+
+.score-card strong {
+    font-size: 27px;
+}
+
+.x-color {
+    color: #22d3ee;
+}
+
+.o-color {
+    color: #f472b6;
+}
+
+.status {
+    min-height: 28px;
+    font-size: 17px;
+    margin-bottom: 18px;
+    color: #d1d5db;
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.cell {
+    aspect-ratio: 1;
+    border: 1px solid #303957;
+    border-radius: 15px;
+    background: linear-gradient(145deg, #171e34, #101426);
+    color: white;
+    font-size: clamp(40px, 13vw, 60px);
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.cell:hover:not(:disabled) {
+    background: #222c49;
+    border-color: #8b5cf6;
+    transform: scale(1.03);
+}
+
+.cell:disabled {
+    cursor: default;
+}
+
+.cell.x {
+    color: #22d3ee;
+    text-shadow: 0 0 18px #22d3ee;
+}
+
+.cell.o {
+    color: #f472b6;
+    text-shadow: 0 0 18px #f472b6;
+}
+
+.cell.winner {
+    background: #253b43;
+    border-color: #34d399;
+    box-shadow: 0 0 18px #34d39955;
+}
+
+.controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 22px;
+}
+
+button.action {
+    flex: 1;
+    padding: 14px 8px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.restart {
+    background: #8b5cf6;
+    color: white;
+}
+
+.reset {
+    background: #20283e;
+    border: 1px solid #374151 !important;
+    color: #d1d5db;
+}
+
+button.action:hover {
+    filter: brightness(1.2);
+    transform: translateY(-2px);
+}
+
+.footer {
+    margin-top: 25px;
+    color: #6b7280;
+    font-size: 11px;
+    letter-spacing: 2px;
+}
+</style>
+</head>
+
+<body>
+
+<main class="game">
+    <h1>NEON XO</h1>
+    <div class="subtitle">THE ULTIMATE MINI GAME</div>
+
+    <div class="scores">
+        <div class="score-card">
+            <span>PLAYER X</span>
+            <strong class="x-color" id="scoreX">0</strong>
+        </div>
+        <div class="score-card">
+            <span>DRAWS</span>
+            <strong id="scoreDraw">0</strong>
+        </div>
+        <div class="score-card">
+            <span>PLAYER O</span>
+            <strong class="o-color" id="scoreO">0</strong>
+        </div>
+    </div>
+
+    <div class="status" id="status" aria-live="polite">
+        Player X's turn
+    </div>
+
+    <div class="board" id="board">
+        <button class="cell" data-index="0" aria-label="Cell 1"></button>
+        <button class="cell" data-index="1" aria-label="Cell 2"></button>
+        <button class="cell" data-index="2" aria-label="Cell 3"></button>
+        <button class="cell" data-index="3" aria-label="Cell 4"></button>
+        <button class="cell" data-index="4" aria-label="Cell 5"></button>
+        <button class="cell" data-index="5" aria-label="Cell 6"></button>
+        <button class="cell" data-index="6" aria-label="Cell 7"></button>
+        <button class="cell" data-index="7" aria-label="Cell 8"></button>
+        <button class="cell" data-index="8" aria-label="Cell 9"></button>
+    </div>
+
+    <div class="controls">
+        <button class="action restart" id="restart">
+            ↻ NEW ROUND
+        </button>
+        <button class="action reset" id="reset">
+            RESET SCORES
+        </button>
+    </div>
+
+    <div class="footer">MADE BY YOU • POWERED BY CODE</div>
+</main>
+
+<script>
+const cells = [...document.querySelectorAll(".cell")];
+const statusText = document.getElementById("status");
+
+const scoreXText = document.getElementById("scoreX");
+const scoreOText = document.getElementById("scoreO");
+const scoreDrawText = document.getElementById("scoreDraw");
+
+const winningLines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6]
+];
+
+let board = Array(9).fill("");
+let currentPlayer = "X";
+let gameOver = false;
+
+let scores = {
+    X: 0,
+    O: 0,
+    draw: 0
+};
+
+function playMove(index) {
+    if (gameOver || board[index] !== "") {
+        return;
+    }
+
+    board[index] = currentPlayer;
+
+    cells[index].textContent = currentPlayer;
+    cells[index].classList.add(
+        currentPlayer.toLowerCase()
+    );
+    cells[index].disabled = true;
+
+    const winningLine = winningLines.find(line =>
+        line.every(i => board[i] === currentPlayer)
+    );
+
+    if (winningLine) {
+        gameOver = true;
+        scores[currentPlayer]++;
+
+        winningLine.forEach(i => {
+            cells[i].classList.add("winner");
+        });
+
+        statusText.textContent =
+            "🎉 Player " + currentPlayer + " wins!";
+
+        updateScores();
+        return;
+    }
+
+    if (board.every(cell => cell !== "")) {
+        gameOver = true;
+        scores.draw++;
+        statusText.textContent = "🤝 It's a draw!";
+        updateScores();
+        return;
+    }
+
+    currentPlayer = currentPlayer === "X" ? "O" : "X";
+    statusText.textContent =
+        "Player " + currentPlayer + "'s turn";
+}
+
+function updateScores() {
+    scoreXText.textContent = scores.X;
+    scoreOText.textContent = scores.O;
+    scoreDrawText.textContent = scores.draw;
+}
+
+function newRound() {
+    board = Array(9).fill("");
+    currentPlayer = "X";
+    gameOver = false;
+
+    cells.forEach(cell => {
+        cell.textContent = "";
+        cell.disabled = false;
+        cell.classList.remove("x", "o", "winner");
+    });
+
+    statusText.textContent = "Player X's turn";
+}
+
+function resetScores() {
+    scores = { X: 0, O: 0, draw: 0 };
+    updateScores();
+    newRound();
+}
+
+cells.forEach(cell => {
+    cell.addEventListener("click", () => {
+        playMove(Number(cell.dataset.index));
+    });
+});
+
+document.getElementById("restart")
+    .addEventListener("click", newRound);
+
+document.getElementById("reset")
+    .addEventListener("click", resetScores);
+</script>
+
+</body>
+</html>
